@@ -16,6 +16,7 @@ class TSP():
         self.distances = {}
         self.dists = []
         self.orderedPaths = []
+        self.pathOfTravel = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
         
@@ -41,15 +42,15 @@ class TSP():
 
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
-    def getShortestPathSet(self, permutations):
-        shortestPathIdx = np.argsort(np.array(self.dists))[0]
-        subset = permutations[shortestPathIdx]
-        self.orderedPaths.append(subset)
+    # def getShortestPathSet(self, permutations):
+    #     shortestPathIdx = np.argsort(np.array(self.dists))[0]
+    #     subset = permutations[shortestPathIdx]
+    #     self.orderedPaths.append(subset)
 
-        ## should find the next best distance containing either of the values in permutation
-        ## then delete the array that is not in both 
-        ## right now it just drops the first one
-        np.delete(self.locs, np.where(self.locs==subset[0]), 0)
+    #     ## should find the next best distance containing either of the values in permutation
+    #     ## then delete the array that is not in both 
+    #     ## right now it just drops the first one
+    #     np.delete(self.locs, np.where(self.locs==subset[0]), 0)
 
     # def getValuesFromKeys(self, array):
     #     '''
@@ -67,55 +68,65 @@ class TSP():
         array.append(float(key.strip('[]').split(", ")[1]))
         return array
 
-        
-
-    def deleteFromDict(self, key):
+    def getValuesFromKey2(self, key):
         '''
         Used to return values from dict. Should be faster than searching an array?
         '''
-        key = key.strip('[]')
+        array = []
+        key = key.strip('[]').replace("][", "|").split("|")[0].split(", ")
+        array.append(float(key[0]))
+        array.append(float(key[1]))
+        return array   
+
+    def deleteFromDict(self, key):
+        '''
+        Delete the visited location from the dictionary.
+        '''
+        key = str(key).strip('[]')
         del self.locations[key]
         
 
     # def getShortestDistance(self, permutations):
 
 
-    def orderPaths(self):
+    def travelPerson(self):
         initialize = True
         # locations = self.locs
         
         while len(self.locations) > 1:
             permutationsList = list(itertools.permutations(self.locs, 2))
             a = list(itertools.permutations(self.locations, 2))
-            permutations = {repr(a):b for a,b in permutationsList}
+            permutations = {repr(a)+repr(b):b for a,b in permutationsList}
 
             if initialize:
                 ## arbitrarily pick first cooridinate as start location
                 start = list(permutations.keys())[0]
-                arr1, arr2 = self.getValuesFromKey(start), list(permutations.values())[0]
+                arr1, arr2 = self.getValuesFromKey2(start), list(permutations.values())[0]
+                
+                ## calculate distances
                 self.dists.append(self.elucidianDistance([arr1, arr2]))
 
+
+                ## store the arrays in order of travel
+                self.pathOfTravel.append(arr1)
+                self.pathOfTravel.append(arr2)
                 ## remove the start location from the dictonary
-                self.deleteFromDict(start)
-                # del self.locations[start]
+                self.deleteFromDict(arr1)
                 ## clear and recreate locs for new permutations
                 self.locs = []
-                [self.locs.append(self.getValuesFromKey(x)) for x in self.locations.keys()]
-
-
-
+                [self.locs.append(self.getValuesFromKey(x)) for x in list(self.locations.keys())]
                 initialize = False
             
+            else:
 
+                for i in range(0, len(permutations)):
+                    self.dists.append(self.elucidianDistance(permutations[i]))
+                shortestPathSet = self.getShortestPathSet(permutations)
 
-            for i in range(0, len(permutations)):
-                self.dists.append(self.elucidianDistance(permutations[i]))
-            shortestPathSet = self.getShortestPathSet(permutations)
+                
 
-            
-
-        self.orderPaths.append(self.locs)
-        print(self.orderPaths)
+        self.pathOfTravel.append(self.locs)
+        print(self.pathOfTravel)
 
 
 
@@ -124,7 +135,7 @@ class TSP():
     # def splitData()
 tsp = TSP()
 tsp.readData()
-tsp.orderPaths()
+tsp.travelPerson()
 
 
 plt.scatter(tsp.locs[:,0], tsp.locs[:,1])
