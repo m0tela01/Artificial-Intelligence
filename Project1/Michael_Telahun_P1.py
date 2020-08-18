@@ -30,8 +30,8 @@ class TSP():
                 if i >= self.DATAIndex:
                     values = row.strip().split(" ")
                     self.locs.append([float(values[1]), float(values[2])])
-                    self.locations[str(values[1]+","+values[2])] = values[0]#str(values[1]+","+values[2])
-        self.locs = np.array(self.locs)
+                    self.locations[str(values[1]+", "+values[2])] = values[0]#str(values[1]+","+values[2])
+        # self.locs = np.array(self.locs)
 
     def elucidianDistance(self, arr):
         arr1 = arr[0]
@@ -41,43 +41,76 @@ class TSP():
 
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
-    def getShortestPathSet(self, permuations):
+    def getShortestPathSet(self, permutations):
         shortestPathIdx = np.argsort(np.array(self.dists))[0]
-        subset = permuations[shortestPathIdx]
+        subset = permutations[shortestPathIdx]
         self.orderedPaths.append(subset)
 
         ## should find the next best distance containing either of the values in permutation
         ## then delete the array that is not in both 
         ## right now it just drops the first one
-
         np.delete(self.locs, np.where(self.locs==subset[0]), 0)
 
-    def getValuesFromKeys(self, array):
-        '''
-        Used to return values from dict. Should be faster than searching an array?
-        '''
-        key = str(self.locs[0]).strip('[]').replace(" ", ",")
-        return self.locations[key]
+    # def getValuesFromKeys(self, array):
+    #     '''
+    #     Used to return values from dict. Should be faster than searching an array?
+    #     '''
+    #     key = str(self.locs[0]).strip('[]').replace(" ", ",")
+        # return self.locations[key]
 
-    def deleteFromDict(self, array):
+    def getValuesFromKey(self, key):
         '''
         Used to return values from dict. Should be faster than searching an array?
         '''
-        key = str(self.locs[0]).strip('[]').replace(" ", ",")
+        array = []
+        array.append(float(key.strip('[]').split(", ")[0]))
+        array.append(float(key.strip('[]').split(", ")[1]))
+        return array
+
+        
+
+    def deleteFromDict(self, key):
+        '''
+        Used to return values from dict. Should be faster than searching an array?
+        '''
+        key = key.strip('[]')
         del self.locations[key]
         
 
-    def getShortestDistance(self, permutations):
+    # def getShortestDistance(self, permutations):
 
 
     def orderPaths(self):
-        locations = self.locs
+        initialize = True
+        # locations = self.locs
         
-        while len(self.locs) > 1:
-            perumations = np.array(list(itertools.permutations(self.locs, 2)))
-            for i in range(0, len(perumations)):
-                self.dists.append(self.elucidianDistance(perumations[i]))
-            shortestPathSet = self.getShortestPathSet(perumations)
+        while len(self.locations) > 1:
+            permutationsList = list(itertools.permutations(self.locs, 2))
+            a = list(itertools.permutations(self.locations, 2))
+            permutations = {repr(a):b for a,b in permutationsList}
+
+            if initialize:
+                ## arbitrarily pick first cooridinate as start location
+                start = list(permutations.keys())[0]
+                arr1, arr2 = self.getValuesFromKey(start), list(permutations.values())[0]
+                self.dists.append(self.elucidianDistance([arr1, arr2]))
+
+                ## remove the start location from the dictonary
+                self.deleteFromDict(start)
+                # del self.locations[start]
+                ## clear and recreate locs for new permutations
+                self.locs = []
+                [self.locs.append(self.getValuesFromKey(x)) for x in self.locations.keys()]
+
+
+
+                initialize = False
+            
+
+
+            for i in range(0, len(permutations)):
+                self.dists.append(self.elucidianDistance(permutations[i]))
+            shortestPathSet = self.getShortestPathSet(permutations)
 
             
 
