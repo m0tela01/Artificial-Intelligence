@@ -2,12 +2,21 @@ import os
 import math
 import itertools
 
+import warnings
+warnings.filterwarnings('ignore')
+
 import numpy as np
 import matplotlib.pyplot as plt
-
+from matplotlib.animation import FuncAnimation
+import seaborn as sns
+plt.style.use('dark_background')
+# sns.set_style('dark')
 
 class TSP():
     def __init__(self):
+        '''
+        Initialize class properties for solution.
+        '''
         self.DIMENSIONIndex = 4
         self.DATAIndex = 7
         self.dataCount = 0
@@ -19,11 +28,24 @@ class TSP():
         self.pathOfTravel = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
+
+        self.fig, self.ax = plt.subplots(figsize=(12,8))
+        # self.ax = plt.figure(figsize=(12,8))
+        # self.ax.set_xlim(0,100)
+        # self.ax.set_ylim(0,100)
+        
+        # self.xdata, self.ydata = [], []
+        self.plot, = self.ax.plot(range(6),np.zeros(6)*np.NaN, 'c-')
+        self.perms = []
         
         # 4th file is Random5.tsp for tests
         # self.locations5File = self.files[4]
 
     def readData(self, locationsFile):
+        '''
+        Read data from provided source files.
+        Store data in locs/locations and skip the useless stuff at the beginning.
+        '''
         with open(self.cwd + "\\" + locationsFile) as f:
             for i, row in enumerate(f):
                 if i == self.DIMENSIONIndex:
@@ -32,25 +54,63 @@ class TSP():
                     values = row.strip().split(" ")
                     self.locs.append([float(values[1]), float(values[2])])
                     self.locations[str(values[1]+", "+values[2])] = values[0]#str(values[1]+","+values[2])
+
+        x, y = np.array(self.locs)[:,0], np.array(self.locs)[:,1]
+        (x_min, x_max), (y_min, y_max) = (int(min(x)-5), int(max(x)+5)), (int(min(y)-5), int(max(y)+5))
+        self.ax.set(xlim=(x_min, x_max), ylim=(y_min, y_max))
         # self.locs = np.array(self.locs)
 
-    def distance(self, arr1, arr2):
+    def initPlot(self):
+        self.ax.set_xlim(0, 100)
+        self.ax.set_ylim(0, 100)
+        return self.plot,
+
+    def plotter(self, i):
+        '''
+        Simple plotter to visualize the travler traveling.
+        '''
+        x,y = np.array(self.perms[i])[:,0], np.array(self.perms[i])[:,1]
+        self.plot.set_data(x,y)
+        return self.plot,
+            
+        
+
+
+    def elucidianDistance(self, arr1, arr2):
+        '''
+        Distance equation provided in class for euclidian distance
+        '''
         x2, x1 = arr2[0], arr1[0]
         y2, y1 = arr2[1], arr1[0]
         
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
-    def elucidianDistance(self, permutation, verbose=False):
+    def elucidianDistances(self, permutations, verbose):
 
         dist = 0.0
+        
+        # self.perms.append(permutations[0])
+        # fig, ax = plt.subplots()
+        
+
         ## go to all destinations
-        for i in range(0, len(permutation)-1):
+        for i in range(0, len(permutations)-1):
+            # self.perms.append(permutations[i+1])
+            
+            # x, y = np.array(self.perms)[:,0], np.array(self.perms)[:,1]
+            # self.plot.set_data(x,y)
+            # self.fig.canvas.draw()
+            # plt.show()
+
             ## plot the traversal here?
-            # if verbose:
-            #     print("show plot")
-            dist += self.distance(permutation[i], permutation[i+1])
+                
+            dist += self.elucidianDistance(permutations[i], permutations[i+1])
+        # if verbose:
+        #     # self.plotter2()
+        #     anim = FuncAnimation(self.fig, self.plotter, frames=[permutations], interval=0)#, blit=True)
+        #     plt.show()
         ## go back to start
-        dist += self.distance(permutation[len(permutation)-1], permutation[0])
+        dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
         
 
@@ -58,7 +118,7 @@ class TSP():
 
     # region: not used
     ## not used
-    def elucidianDistance2(self, arr, verbose=False):
+    def elucidianDistances2(self, arr, verbose=False):
         arr1 = arr[0]
         arr2 = arr[1]
         x2, x1 = arr2[0], arr1[0]
@@ -127,7 +187,7 @@ class TSP():
                 arr1, arr2 = self.getValuesFromKey2(start), list(permutations.values())[0]
                 
                 ## calculate distances
-                self.dists.append(self.elucidianDistance([arr1, arr2]))
+                self.dists.append(self.elucidianDistances([arr1, arr2]))
 
 
                 ## store the arrays in order of travel
@@ -143,7 +203,7 @@ class TSP():
             else:
 
                 for i in range(0, len(permutations)):
-                    self.dists.append(self.elucidianDistance(permutations[i]))
+                    self.dists.append(self.elucidianDistances(permutations[i]))
                 shortestPathSet = self.getShortestPathSet(permutations)
 
                 
@@ -152,7 +212,7 @@ class TSP():
         print(self.pathOfTravel)
     # endregion 
 
-    def travelPerson(self):
+    def travelPerson(self, verbose=False):
         initialize = True
         # locations = self.locs
         
@@ -163,9 +223,17 @@ class TSP():
         ## find the distance of each permutation location to location, aggregate, minimum
         ## store index of permulations list as value and aggregate as key?
         for i in range(0, len(permutations)):
-            self.dists.append(self.elucidianDistance(permutations[i]))
+            self.dists.append(self.elucidianDistances(permutations[i], verbose))
             ## plot the traversal here?
 
+        if verbose:
+            self.perms = permutations
+            # for arr in permutations:
+            #     self.xdata, self.ydata = [], []
+                # for point in arr:
+                # self.plotter2()
+            anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=100)#, blit=True)
+            plt.show()
 
         ## this
         shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
@@ -190,20 +258,27 @@ class TSP():
 
 
 
+
                     
-
+# import datetime
+# start = datetime.datetime.now()
+###############
 tsp = TSP()
+print(tsp.files[4])
 tsp.readData(tsp.files[4])
-tsp.travelPerson()
+tsp.travelPerson(verbose=True)
+###############
+# end = datetime.datetime.now()
+# tt = end - start
+# print(str(tt.seconds)+"."+str(tt.microseconds)+" s")
+
+# plt.scatter(tsp.locs[:,0], tsp.locs[:,1])
+# plt.show()
+
+# plt.plot(tsp.locs[:,0], tsp.locs[:,1], 'o-')
+# plt.show()
 
 
-plt.scatter(tsp.locs[:,0], tsp.locs[:,1])
-plt.show()
-
-plt.plot(tsp.locs[:,0], tsp.locs[:,1], 'o-')
-plt.show()
-
-
-print(tsp.locations)
+# print(tsp.locations)
 
 
