@@ -30,16 +30,8 @@ class TSP():
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
 
         self.fig, self.ax = plt.subplots(figsize=(12,8))
-        # self.ax = plt.figure(figsize=(12,8))
-        # self.ax.set_xlim(0,100)
-        # self.ax.set_ylim(0,100)
-        
-        # self.xdata, self.ydata = [], []
         self.plot, = self.ax.plot(range(6),np.zeros(6)*np.NaN, 'c-')
         self.perms = []
-        
-        # 4th file is Random5.tsp for tests
-        # self.locations5File = self.files[4]
 
     def readData(self, locationsFile):
         '''
@@ -55,15 +47,12 @@ class TSP():
                     self.locs.append([float(values[1]), float(values[2])])
                     self.locations[str(values[1]+", "+values[2])] = values[0]#str(values[1]+","+values[2])
 
+        ## for plotting
         x, y = np.array(self.locs)[:,0], np.array(self.locs)[:,1]
         (x_min, x_max), (y_min, y_max) = (int(min(x)-5), int(max(x)+5)), (int(min(y)-5), int(max(y)+5))
         self.ax.set(xlim=(x_min, x_max), ylim=(y_min, y_max))
         # self.locs = np.array(self.locs)
 
-    def initPlot(self):
-        self.ax.set_xlim(0, 100)
-        self.ax.set_ylim(0, 100)
-        return self.plot,
 
     def plotter(self, i):
         '''
@@ -85,30 +74,15 @@ class TSP():
         
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
-    def elucidianDistances(self, permutations, verbose):
-
+    def calculateDistances(self, permutations, verbose):
+        '''
+        Calculate the distance measure for each permuatation created.
+        '''
         dist = 0.0
         
-        # self.perms.append(permutations[0])
-        # fig, ax = plt.subplots()
-        
-
         ## go to all destinations
         for i in range(0, len(permutations)-1):
-            # self.perms.append(permutations[i+1])
-            
-            # x, y = np.array(self.perms)[:,0], np.array(self.perms)[:,1]
-            # self.plot.set_data(x,y)
-            # self.fig.canvas.draw()
-            # plt.show()
-
-            ## plot the traversal here?
-                
             dist += self.elucidianDistance(permutations[i], permutations[i+1])
-        # if verbose:
-        #     # self.plotter2()
-        #     anim = FuncAnimation(self.fig, self.plotter, frames=[permutations], interval=0)#, blit=True)
-        #     plt.show()
         ## go back to start
         dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
@@ -118,7 +92,7 @@ class TSP():
 
     # region: not used
     ## not used
-    def elucidianDistances2(self, arr, verbose=False):
+    def calculateDistances2(self, arr, verbose=False):
         arr1 = arr[0]
         arr2 = arr[1]
         x2, x1 = arr2[0], arr1[0]
@@ -187,7 +161,7 @@ class TSP():
                 arr1, arr2 = self.getValuesFromKey2(start), list(permutations.values())[0]
                 
                 ## calculate distances
-                self.dists.append(self.elucidianDistances([arr1, arr2]))
+                self.dists.append(self.calculateDistances([arr1, arr2]))
 
 
                 ## store the arrays in order of travel
@@ -203,7 +177,7 @@ class TSP():
             else:
 
                 for i in range(0, len(permutations)):
-                    self.dists.append(self.elucidianDistances(permutations[i]))
+                    self.dists.append(self.calculateDistances(permutations[i]))
                 shortestPathSet = self.getShortestPathSet(permutations)
 
                 
@@ -213,6 +187,10 @@ class TSP():
     # endregion 
 
     def travelPerson(self, verbose=False):
+        '''
+        "Main" function for combining: creating permutations,
+        visiting each location, plotting the traversal, and finding the best path.
+        '''
         initialize = True
         # locations = self.locs
         
@@ -223,15 +201,11 @@ class TSP():
         ## find the distance of each permutation location to location, aggregate, minimum
         ## store index of permulations list as value and aggregate as key?
         for i in range(0, len(permutations)):
-            self.dists.append(self.elucidianDistances(permutations[i], verbose))
+            self.dists.append(self.calculateDistances(permutations[i], verbose))
             ## plot the traversal here?
 
         if verbose:
             self.perms = permutations
-            # for arr in permutations:
-            #     self.xdata, self.ydata = [], []
-                # for point in arr:
-                # self.plotter2()
             anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=100)#, blit=True)
             plt.show()
 
