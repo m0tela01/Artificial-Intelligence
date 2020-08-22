@@ -8,8 +8,8 @@ warnings.filterwarnings('ignore')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import seaborn as sns
 plt.style.use('dark_background')
+# import seaborn as sns
 # sns.set_style('dark')
 
 class TSP():
@@ -53,7 +53,6 @@ class TSP():
         self.ax.set(xlim=(x_min, x_max), ylim=(y_min, y_max))
         # self.locs = np.array(self.locs)
 
-
     def plotter(self, i):
         '''
         Simple plotter to visualize the travler traveling.
@@ -62,9 +61,6 @@ class TSP():
         self.plot.set_data(x,y)
         return self.plot,
             
-        
-
-
     def elucidianDistance(self, arr1, arr2):
         '''
         Distance equation provided in class for euclidian distance
@@ -86,9 +82,53 @@ class TSP():
         ## go back to start
         dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
+
+    def travelPerson(self, verbose=False):
+        '''
+        "Main" function for combining: creating permutations,
+        visiting each location, plotting the traversal, and finding the best path.
+        '''
+        initialize = True
+        # locations = self.locs
+        
+        # while len(self.locations) > 1:
+        permutations = list(itertools.permutations(self.locs, self.dataCount))
         
 
-    
+        ## find the distance of each permutation location to location, aggregate, minimum
+        ## store index of permulations list as value and aggregate as key?
+        for i in range(0, len(permutations)):
+            self.dists.append(self.calculateDistances(permutations[i], verbose))
+            ## plot the traversal here?
+
+        if verbose:
+            self.perms = permutations
+            anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=100)#, blit=True)
+            plt.show()
+
+        ## this
+        shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
+        subset1 = permutations[shortestPathIdx1]
+        print(subset1)
+
+
+        ## or this
+        # shortestPathIdx2 = np.argsort(np.array(self.dists))[0]
+        # subset2 = permutations[shortestPathIdx2]
+
+
+
+
+        ####### wasted?
+        ## shortest overall distance (key in dict)
+        # shortestDistanceKey = min(self.distances, key=self.distances.get)
+        # ## index of shortest overall distance (value in dict)
+        # shortestDistanceIdx = self.distances[shortestDistanceKey]
+        # ## permutation w/ shortest overal distance (indexed at value in dict)
+        # shortestPath = permutationsList[shortestDistanceIdx]
+
+
+
 
     # region: not used
     ## not used
@@ -185,50 +225,6 @@ class TSP():
         self.pathOfTravel.append(self.locs)
         print(self.pathOfTravel)
     # endregion 
-
-    def travelPerson(self, verbose=False):
-        '''
-        "Main" function for combining: creating permutations,
-        visiting each location, plotting the traversal, and finding the best path.
-        '''
-        initialize = True
-        # locations = self.locs
-        
-        # while len(self.locations) > 1:
-        permutations = list(itertools.permutations(self.locs, self.dataCount))
-        
-
-        ## find the distance of each permutation location to location, aggregate, minimum
-        ## store index of permulations list as value and aggregate as key?
-        for i in range(0, len(permutations)):
-            self.dists.append(self.calculateDistances(permutations[i], verbose))
-            ## plot the traversal here?
-
-        if verbose:
-            self.perms = permutations
-            anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=100)#, blit=True)
-            plt.show()
-
-        ## this
-        shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
-        subset1 = permutations[shortestPathIdx1]
-        print(subset1)
-
-
-        ## or this
-        # shortestPathIdx2 = np.argsort(np.array(self.dists))[0]
-        # subset2 = permutations[shortestPathIdx2]
-
-
-
-
-        ####### wasted?
-        ## shortest overall distance (key in dict)
-        # shortestDistanceKey = min(self.distances, key=self.distances.get)
-        # ## index of shortest overall distance (value in dict)
-        # shortestDistanceIdx = self.distances[shortestDistanceKey]
-        # ## permutation w/ shortest overal distance (indexed at value in dict)
-        # shortestPath = permutationsList[shortestDistanceIdx]
 
 
 
