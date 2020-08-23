@@ -1,7 +1,7 @@
 import os
 import math
+import argparse
 import itertools
-
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -9,13 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 plt.style.use('dark_background')
-# import seaborn as sns
-# sns.set_style('dark')
 
 class TSP():
-    def __init__(self):
+    def __init__(self, locationFile, verbose=False):
         '''
-        Initialize class properties for solution.
+        Initialize class & properties.
         '''
         self.DIMENSIONIndex = 4
         self.DATAIndex = 7
@@ -30,28 +28,28 @@ class TSP():
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
 
         self.fig, self.ax = plt.subplots(figsize=(12,8))
-        self.plot, = self.ax.plot(range(6),np.zeros(6)*np.NaN, 'c-')
         self.perms = []
+        self.locationsFile = "Random" + locationFile + ".tsp"
+        self.verbose = verbose
 
-    def readData(self, locationsFile):
+    def readData(self):
         '''
         Read data from provided source files.
         Store data in locs/locations and skip the useless stuff at the beginning.
         '''
-        with open(self.cwd + "\\" + locationsFile) as f:
+        with open(self.cwd + "\\" + self.locationsFile) as f:
             for i, row in enumerate(f):
                 if i == self.DIMENSIONIndex:
                     self.dataCount = int(row.strip().split(" ")[1])
                 if i >= self.DATAIndex:
                     values = row.strip().split(" ")
                     self.locs.append([float(values[1]), float(values[2])])
-                    self.locations[str(values[1]+", "+values[2])] = values[0]#str(values[1]+","+values[2])
+                    self.locations[str(values[1]+", "+values[2])] = values[0]
 
         ## for plotting
         x, y = np.array(self.locs)[:,0], np.array(self.locs)[:,1]
         (x_min, x_max), (y_min, y_max) = (int(min(x)-5), int(max(x)+5)), (int(min(y)-5), int(max(y)+5))
         self.ax.set(xlim=(x_min, x_max), ylim=(y_min, y_max))
-        # self.locs = np.array(self.locs)
 
     def plotter(self, i):
         '''
@@ -63,14 +61,14 @@ class TSP():
             
     def elucidianDistance(self, arr1, arr2):
         '''
-        Distance equation provided in class for euclidian distance
+        Distance equation provided in class for euclidian distance.
         '''
         x2, x1 = arr2[0], arr1[0]
         y2, y1 = arr2[1], arr1[0]
         
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
-    def calculateDistances(self, permutations, verbose):
+    def calculateDistances(self, permutations):
         '''
         Calculate the distance measure for each permuatation created.
         '''
@@ -83,34 +81,36 @@ class TSP():
         dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
 
-    def travelPerson(self, verbose=False):
+    def travelPerson(self):
         '''
         "Main" function for combining: creating permutations,
         visiting each location, plotting the traversal, and finding the best path.
         '''
+        self.readData()
         initialize = True
-        # locations = self.locs
-        
-        # while len(self.locations) > 1:
         permutations = list(itertools.permutations(self.locs, self.dataCount))
         
 
         ## find the distance of each permutation location to location, aggregate, minimum
         ## store index of permulations list as value and aggregate as key?
         for i in range(0, len(permutations)):
-            self.dists.append(self.calculateDistances(permutations[i], verbose))
+            self.dists.append(self.calculateDistances(permutations[i]))
             ## plot the traversal here?
 
-        if verbose:
+        if self.verbose:
             self.perms = permutations
+            self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'c-')
             anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=100)#, blit=True)
-            plt.show()
+            plt.show(block=False)
+            plt.pause(1)
+            plt.close()
 
         ## this
         shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
         subset1 = permutations[shortestPathIdx1]
-        print(subset1)
-
+        print("⚶"*90)
+        print("Shortest Distance: {}\nPath of Travel: {}".format(str(min(self.dists)), str(subset1)))
+        print("⚶"*90)
 
         ## or this
         # shortestPathIdx2 = np.argsort(np.array(self.dists))[0]
@@ -118,19 +118,15 @@ class TSP():
 
 
 
-
-        ####### wasted?
-        ## shortest overall distance (key in dict)
-        # shortestDistanceKey = min(self.distances, key=self.distances.get)
-        # ## index of shortest overall distance (value in dict)
-        # shortestDistanceIdx = self.distances[shortestDistanceKey]
-        # ## permutation w/ shortest overal distance (indexed at value in dict)
-        # shortestPath = permutationsList[shortestDistanceIdx]
-
-
-
-
     # region: not used
+    ## not used
+    def getUserInputs(self):
+        '''
+        Reads the users input commands for file number and verbose for plotting.
+        '''
+        print("⚶"*90)
+        self.locationsFile = "Random"+ input("Please enter the number representing the # of cities\n(i.e. for Random5.tsp type 5 then enter) ") + ".tsp"
+        print("⚶"*90)
     ## not used
     def calculateDistances2(self, arr, verbose=False):
         arr1 = arr[0]
@@ -226,29 +222,19 @@ class TSP():
         print(self.pathOfTravel)
     # endregion 
 
+def inputParser():
+    '''
+    Simple input parser.
+    '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument("locationCount", type=str)
+    parser.add_argument("--verbose", action="store_true")
+    return parser.parse_args()
 
 
-
-                    
-# import datetime
-# start = datetime.datetime.now()
 ###############
-tsp = TSP()
-print(tsp.files[4])
-tsp.readData(tsp.files[4])
-tsp.travelPerson(verbose=True)
-###############
-# end = datetime.datetime.now()
-# tt = end - start
-# print(str(tt.seconds)+"."+str(tt.microseconds)+" s")
-
-# plt.scatter(tsp.locs[:,0], tsp.locs[:,1])
-# plt.show()
-
-# plt.plot(tsp.locs[:,0], tsp.locs[:,1], 'o-')
-# plt.show()
-
-
-# print(tsp.locations)
-
+if __name__ == "__main__":
+    parser = inputParser()
+    tsp = TSP(parser.locationCount, parser.verbose)
+    tsp.travelPerson()
 
