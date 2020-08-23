@@ -99,11 +99,11 @@ class TSP():
 
         if self.verbose:
             self.perms = permutations
-            self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'c-')
-            anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=100)#, blit=True)
-            plt.show(block=False)
-            plt.pause(1)
-            plt.close()
+            self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
+            anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=10)#, blit=True)
+            plt.show()
+            # plt.pause(1)
+            # plt.close()
 
         ## this
         shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
@@ -115,7 +115,6 @@ class TSP():
         ## or this
         # shortestPathIdx2 = np.argsort(np.array(self.dists))[0]
         # subset2 = permutations[shortestPathIdx2]
-
 
 
     # region: not used
