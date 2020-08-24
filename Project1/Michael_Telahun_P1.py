@@ -11,6 +11,9 @@ from matplotlib.animation import FuncAnimation
 plt.style.use('dark_background')
 
 class TSP():
+    '''
+    Traveling sales person class.
+    '''
     def __init__(self, locationFile, verbose=False):
         '''
         Initialize class & properties.
@@ -18,15 +21,12 @@ class TSP():
         self.DIMENSIONIndex = 4
         self.DATAIndex = 7
         self.dataCount = 0
-        self.locations = {}
         self.locs = []
-        self.distances = {}
         self.dists = []
-        self.orderedPaths = []
-        self.pathOfTravel = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
 
+        ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
         self.perms = []
         self.locationsFile = "Random" + locationFile + ".tsp"
@@ -44,7 +44,6 @@ class TSP():
                 if i >= self.DATAIndex:
                     values = row.strip().split(" ")
                     self.locs.append([float(values[1]), float(values[2])])
-                    self.locations[str(values[1]+", "+values[2])] = values[0]
 
         ## for plotting
         x, y = np.array(self.locs)[:,0], np.array(self.locs)[:,1]
@@ -83,8 +82,8 @@ class TSP():
 
     def travelPerson(self):
         '''
-        "Main" function for combining: creating permutations,
-        visiting each location, plotting the traversal, and finding the best path.
+        "Main" function for combining: reads data, creates permutations,
+        visits each location, and find the best path/distance. Also can plot the traversal.
         '''
         self.readData()
         initialize = True
@@ -95,15 +94,12 @@ class TSP():
         ## store index of permulations list as value and aggregate as key?
         for i in range(0, len(permutations)):
             self.dists.append(self.calculateDistances(permutations[i]))
-            ## plot the traversal here?
 
         if self.verbose:
             self.perms = permutations
             self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
             anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=10)#, blit=True)
             plt.show()
-            # plt.pause(1)
-            # plt.close()
 
         ## this
         shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
@@ -112,118 +108,9 @@ class TSP():
         print("Shortest Distance: {}\nPath of Travel: {}".format(str(min(self.dists)), str(subset1)))
         print("⚶"*90)
 
-        ## or this
-        # shortestPathIdx2 = np.argsort(np.array(self.dists))[0]
-        # subset2 = permutations[shortestPathIdx2]
-
-
-    # region: not used
-    ## not used
-    def getUserInputs(self):
-        '''
-        Reads the users input commands for file number and verbose for plotting.
-        '''
-        print("⚶"*90)
-        self.locationsFile = "Random"+ input("Please enter the number representing the # of cities\n(i.e. for Random5.tsp type 5 then enter) ") + ".tsp"
-        print("⚶"*90)
-    ## not used
-    def calculateDistances2(self, arr, verbose=False):
-        arr1 = arr[0]
-        arr2 = arr[1]
-        x2, x1 = arr2[0], arr1[0]
-        y2, y1 = arr2[1], arr1[0]
-
-        if verbose:
-            print("show plot")
-
-        return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
-    ## not used
-    def getShortestPathSet(self, permutations):
-        shortestPathIdx = np.argsort(np.array(self.dists))[0]
-        subset = permutations[shortestPathIdx]
-        self.orderedPaths.append(subset)
-
-        ## should find the next best distance containing either of the values in permutation
-        ## then delete the array that is not in both 
-        ## right now it just drops the first one
-        np.delete(self.locs, np.where(self.locs==subset[0]), 0)
-    ## not used
-    def getValuesFromKeys(self, array):
-        '''
-        Used to return values from dict. Should be faster than searching an array?
-        '''
-        key = str(self.locs[0]).strip('[]').replace(" ", ",")
-        return self.locations[key]
-    ## not used
-    def getValuesFromKey(self, key):
-        '''
-        Used to return values from dict. Should be faster than searching an array?
-        '''
-        array = []
-        array.append(float(key.strip('[]').split(", ")[0]))
-        array.append(float(key.strip('[]').split(", ")[1]))
-        return array
-    ## not used
-    def getValuesFromKey2(self, key):
-        '''
-        Used to return values from dict. Should be faster than searching an array?
-        '''
-        array = []
-        key = key.strip('[]').replace("][", "|").split("|")[0].split(", ")
-        array.append(float(key[0]))
-        array.append(float(key[1]))
-        return array   
-    ## not used
-    def deleteFromDict(self, key):
-        '''
-        Delete the visited location from the dictionary.
-        '''
-        key = str(key).strip('[]')
-        del self.locations[key]
-    ## not used
-    def travelPerson2(self):
-        initialize = True
-        # locations = self.locs
-        
-        while len(self.locations) > 1:
-            permutationsList = list(itertools.permutations(self.locs, 2))
-            a = list(itertools.permutations(self.locations, 2))
-            permutations = {repr(a)+repr(b):b for a,b in permutationsList}
-
-            if initialize:
-                ## arbitrarily pick first cooridinate as start location
-                start = list(permutations.keys())[0]
-                arr1, arr2 = self.getValuesFromKey2(start), list(permutations.values())[0]
-                
-                ## calculate distances
-                self.dists.append(self.calculateDistances([arr1, arr2]))
-
-
-                ## store the arrays in order of travel
-                self.pathOfTravel.append(arr1)
-                self.pathOfTravel.append(arr2)
-                ## remove the start location from the dictonary
-                self.deleteFromDict(arr1)
-                ## clear and recreate locs for new permutations
-                self.locs = []
-                [self.locs.append(self.getValuesFromKey(x)) for x in list(self.locations.keys())]
-                initialize = False
-            
-            else:
-
-                for i in range(0, len(permutations)):
-                    self.dists.append(self.calculateDistances(permutations[i]))
-                shortestPathSet = self.getShortestPathSet(permutations)
-
-                
-
-        self.pathOfTravel.append(self.locs)
-        print(self.pathOfTravel)
-    # endregion 
-
 def inputParser():
     '''
-    Simple input parser.
+    Simple command line input parser.
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument("locationCount", type=str)
