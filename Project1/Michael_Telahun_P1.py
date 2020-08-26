@@ -63,7 +63,7 @@ class TSP():
         Distance equation provided in class for euclidian distance.
         '''
         x2, x1 = arr2[0], arr1[0]
-        y2, y1 = arr2[1], arr1[0]
+        y2, y1 = arr2[1], arr1[1]
         
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
