@@ -1,5 +1,6 @@
 import os
 import math
+import time
 import argparse
 import itertools
 import warnings
@@ -120,7 +121,13 @@ def inputParser():
 
 ###############
 if __name__ == "__main__":
-    parser = inputParser()
-    tsp = TSP(parser.locationCount, parser.verbose)
+    # parser = inputParser()
+    # tsp = TSP(parser.locationCount, parser.verbose)
+
+
+    t0 = time.time()
+    tsp = TSP("11",False)# parser.verbose)
     tsp.travelPerson()
+    t1 = time.time()
+    print(t1-t0)
 
