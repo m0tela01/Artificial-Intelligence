@@ -30,8 +30,31 @@ class TSP():
         ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
         self.perms = []
-        self.locationsFile = "Random" + locationFile + ".tsp"
+        self.locationsFile = locationFile + "PointDFSBFS.tsp"
+        # self.locationsFile = "Random" + locationFile + ".tsp"
         self.verbose = verbose
+
+        ## project 2
+        self.visitedDFS = set()
+        self.visitedBFS = []
+        self.queBFS = []
+        self.map = {
+            "1" : [2,3,4],
+            "2" : [3],
+            "3" : [4,5],
+            "4" : [5,6,7],
+            "5" : [7,8],
+            "6" : [8],
+            "7" : [9, 10],
+            "8" : [9, 10,11],
+            "9" : [11],
+            "10" : [11],
+            "11" : []
+        }
+        self.weights = {
+        }
+        self.fullPaths = []
+        self.completePaths = set()
 
     def readData(self):
         '''
@@ -68,6 +91,12 @@ class TSP():
         
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
+    def calculateWeights(self):
+        for key, adjacents in self.map.items():
+            for adjacent in adjacents:
+                distance = self.elucidianDistance(self.locs[int(key)-1], self.locs[int(adjacent)-1])
+                self.weights[str(key)+"-"+str(adjacent)] = distance
+
     def calculateDistances(self, permutations):
         '''
         Calculate the distance measure for each permuatation created.
@@ -81,13 +110,70 @@ class TSP():
         dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
 
+    def DFS(self, visited, location):
+        if location not in visited:
+            print(location)
+            visited.add(location)
+            for neighbor in self.map[str(location)]:
+                self.DFS(visited, neighbor)
+
+
+    def getFullPath(self, currentPaths):
+        fullPaths = self.fullPaths.copy()
+        for path in currentPaths:
+            for partialPaths in self.fullPaths:
+                for i, partialPath in enumerate(partialPaths):
+                    splitPaths = partialPath.split("-")
+                    if splitPaths[len(splitPaths)-1] == path.split("-")[0]:
+                        # partialPaths[i] = partialPath+"-"+path
+                        # self.fullPaths.append([partialPaths[i]])
+                        self.fullPaths.append([partialPath+"-"+path])
+                    if path.split("-")[len(path.split("-"))-1] == "11":
+                        # partialPaths[i] = partialPath+"-"+path  
+                        # self.completePaths.append([partialPaths[i]])
+                        self.completePaths.add(partialPath+"-"+path)
+
+
+    def BFS(self, visited, location):
+        visited.append(location)
+        self.queBFS.append(location)
+        paths = []
+        count = 0
+        while self.queBFS:
+            if count == 1:
+                self.fullPaths.append(paths)
+            elif count > 1:
+                self.getFullPath(paths)
+            else:
+                pass
+            paths = []
+
+            current = self.queBFS.pop(0)
+            # path.append(current)
+            print(current, end= " ")
+            
+            for neighbor in self.map[str(current)]:
+                paths.append(str(current)+"-"+str(neighbor))
+                if neighbor not in visited:
+                    visited.append(str(neighbor))
+                    self.queBFS.append(neighbor)
+
+            count+=1
+
+
     def travelPerson(self):
         '''
         "Main" function for combining: reads data, creates permutations,
         visits each location, and find the best path/distance. Also can plot the traversal.
         '''
         self.readData()
-        initialize = True
+
+        self.calculateWeights()
+
+        self.BFS(self.visitedBFS, "1")
+
+        self.DFS(self.visitedDFS, "1")
+        
         permutations = list(itertools.permutations(self.locs, self.dataCount))
         
 
@@ -114,7 +200,7 @@ def inputParser():
     Simple command line input parser.
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument("locationCount", type=str)
+    # parser.add_argument("locationCount", type=str)
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
@@ -122,12 +208,13 @@ def inputParser():
 ###############
 if __name__ == "__main__":
     # parser = inputParser()
-    # tsp = TSP(parser.locationCount, parser.verbose)
+    # tsp = TSP("11", parser.verbose)
+    
+    tsp = TSP("11", True)
 
-
-    t0 = time.time()
-    tsp = TSP("11",False)# parser.verbose)
+    # t0 = time.time()
+    
     tsp.travelPerson()
-    t1 = time.time()
+    # t1 = time.time()
     print(t1-t0)
 
