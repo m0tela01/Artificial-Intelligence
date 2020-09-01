@@ -120,24 +120,27 @@ class TSP():
 
 
     def getFullPath(self, currentPaths):
+        '''
+        This is very bad. Gathers adjecent paths to solve for the "effiecent route"
+        part of this question. Also plotting needs this.
+        '''
         fullPaths = self.fullPaths.copy()
         for path in currentPaths:
             for partialPaths in self.fullPaths:
-                for i, partialPath in enumerate(partialPaths):
+                for partialPath in partialPaths:
                     splitPaths = partialPath.split("-")
                     if splitPaths[len(splitPaths)-1] == path.split("-")[0]:
-                        # partialPaths[i] = partialPath+"-"+path
-                        # self.fullPaths.append([partialPaths[i]])
                         self.fullPaths.append([partialPath+"-"+path])
                         if path.split("-")[len(path.split("-"))-1] == "11":
-                            # partialPaths[i] = partialPath+"-"+path  
-                            # self.completePaths.append([partialPaths[i]])
                             self.completePaths.add(partialPath+"-"+path)
 
     def calculateDistancesBFS(self):
         best = 999999
         resultPath = []
 
+        ## we want the bad version of self.fullpaths for plotting
+        ## instead of lines 134 and 135 could use line below
+        ## paths= [list(x) for x in set(tuple(x) for x in self.fullPaths)]
         for completePath in self.completePaths:
             adjList = re.findall("[^-]+-[^-]+", completePath)
             dist = 0.0
@@ -176,6 +179,24 @@ class TSP():
 
             count+=1
 
+    def getPlotData(self):
+        initial = True
+        result = []
+        for fullPath in self.fullPaths:
+            if initial:
+                for i in range(len(fullPath)):
+                    path = self.fullPaths[0]
+                    indexes = list(set([int(s) for s in path[i].split("-") if s.isdigit()]))
+                    result.append([self.locs[i-1] for i in indexes])
+                initial = False
+            else:
+                path = fullPath[0]
+                # sorted(list(map(int, set(path.replace("-", ",").split(",")))))
+
+                indexes = list(set([int(s) for s in path.split("-") if s.isdigit()]))
+                result.append([self.locs[i-1] for i in indexes])
+        return result
+
 
     def travelPerson(self):
         '''
@@ -189,27 +210,32 @@ class TSP():
         self.BFS(self.visitedBFS, "1")
         bestDistanceBFS, bestPathBFS =  self.calculateDistancesBFS()
 
-        self.DFS(self.visitedDFS, "1")
+        # self.DFS(self.visitedDFS, "1")
         
-        permutations = list(itertools.permutations(self.locs, self.dataCount))
+        # permutations = list(itertools.permutations(self.locs, self.dataCount))
         
 
         ## find the distance of each permutation location to location, aggregate, minimum
         ## store index of permulations list as value and aggregate as key?
-        for i in range(0, len(permutations)):
-            self.dists.append(self.calculateDistances(permutations[i]))
+        # for i in range(0, len(permutations)):
+        #     self.dists.append(self.calculateDistances(permutations[i]))
 
         if self.verbose:
-            self.perms = permutations
+            self.perms = self.getPlotData()
             self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
-            anim = FuncAnimation(self.fig, self.plotter, frames=len(permutations), repeat=False, interval=10)#, blit=True)
+            anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=10)#, blit=True)
             plt.show()
 
         ## this
-        shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
-        subset1 = permutations[shortestPathIdx1]
+        # shortestPathIdx1 = sorted(range(len(self.dists)), key=self.dists.__getitem__)[0]
+        # subset1 = permutations[shortestPathIdx1]
         print("⚶"*90)
-        print("Shortest Distance: {}\nPath of Travel: {}".format(str(min(self.dists)), str(subset1)))
+        a = list(set([int(s) for s in '-'.join(bestPathBFS).split("-") if s.isdigit()]))
+        actualPath = [self.locs[i-1] for i in a]
+        plt.plot([x[0] for x in actualPath],[x[1] for x in actualPath])
+        plt.show()
+
+        print("Shortest Distance: {:.2f}\nPath of Travel: {}".format(bestDistanceBFS, str(bestPathBFS)))
         print("⚶"*90)
 
 def inputParser():
