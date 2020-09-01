@@ -1,4 +1,5 @@
 import os
+import re
 import math
 import time
 import argparse
@@ -128,10 +129,25 @@ class TSP():
                         # partialPaths[i] = partialPath+"-"+path
                         # self.fullPaths.append([partialPaths[i]])
                         self.fullPaths.append([partialPath+"-"+path])
-                    if path.split("-")[len(path.split("-"))-1] == "11":
-                        # partialPaths[i] = partialPath+"-"+path  
-                        # self.completePaths.append([partialPaths[i]])
-                        self.completePaths.add(partialPath+"-"+path)
+                        if path.split("-")[len(path.split("-"))-1] == "11":
+                            # partialPaths[i] = partialPath+"-"+path  
+                            # self.completePaths.append([partialPaths[i]])
+                            self.completePaths.add(partialPath+"-"+path)
+
+    def calculateDistancesBFS(self):
+        best = 999999
+        resultPath = []
+
+        for completePath in self.completePaths:
+            adjList = re.findall("[^-]+-[^-]+", completePath)
+            dist = 0.0
+            for adj in adjList:
+                dist += self.weights[adj]
+            if dist < best:
+                best = dist
+                resultPath = adjList
+        return best, resultPath
+
 
 
     def BFS(self, visited, location):
@@ -171,6 +187,7 @@ class TSP():
         self.calculateWeights()
 
         self.BFS(self.visitedBFS, "1")
+        bestDistanceBFS, bestPathBFS =  self.calculateDistancesBFS()
 
         self.DFS(self.visitedDFS, "1")
         
