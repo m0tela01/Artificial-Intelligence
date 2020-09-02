@@ -36,18 +36,18 @@ class TSP():
         self.verbose = verbose
 
         ## project 2
-        self.visitedDFS = set()
+        self.visitedDFS = []#set()
         self.visitedBFS = []
         self.queBFS = []
         self.map = {
-            "1" : [2,3,4],
+            "1" : [2, 3, 4],
             "2" : [3],
-            "3" : [4,5],
-            "4" : [5,6,7],
-            "5" : [7,8],
+            "3" : [4, 5],
+            "4" : [5, 6, 7],
+            "5" : [7, 8],
             "6" : [8],
             "7" : [9, 10],
-            "8" : [9, 10,11],
+            "8" : [9, 10, 11],
             "9" : [11],
             "10" : [11],
             "11" : []
@@ -55,7 +55,13 @@ class TSP():
         self.weights = {
         }
         self.fullPaths = []
-        self.completePaths = set()
+        self.completePaths = []#set()
+
+        self.pathDFS = [1]
+        self.fullPathDFS = []
+        self.currentPathDFS = []
+        self.initalDFS = True
+        self.shouldExitDFS = False
 
     def readData(self):
         '''
@@ -111,18 +117,105 @@ class TSP():
         dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
 
+
+
+    def goBack(self, test, countBack, location, currentTest):
+        '''
+        If there was an update to the location remove the most
+        recent subpaths that are completed then add the connection
+        between the current location and the most recent location.
+        '''
+
+        for l_idx in reversed(range(self.pathDFS[len(self.pathDFS)-1])):
+            currentLocation = self.map[str(l_idx+1)]
+            countBack+=1
+            for w_idx in range(len(self.map[str(location)])):
+                currentWeight = currentLocation[w_idx]
+                currentTest.append(currentWeight)
+                if test != currentTest:
+                    # neighbor = currentWeight
+                    location = currentWeight
+
+        if countBack > 0:
+            skip = True
+            for i in range(countBack):
+                if skip:
+                    del self.pathDFS[-1]
+                    skip = False
+                del self.currentPathDFS[-1]
+
+            last = self.pathDFS[len(self.pathDFS)-1]
+            self.pathDFS.append(location)
+            self.currentPathDFS.append(str(last)+"-"+str(location))
+        
+        return location
+
     def DFS(self, visited, location):
-        if location not in visited:
+        
+            
+        while not self.shouldExitDFS:
             print(location)
-            visited.add(location)
+            visited.append(str(location))
+
             for neighbor in self.map[str(location)]:
+                self.pathDFS.append(neighbor)
+                self.currentPathDFS.append(str(location)+'-'+ str(neighbor))
+                self.fullPaths.append(self.currentPathDFS.copy())
+
+                if str(neighbor) == "11":
+                    self.completePaths.append(self.currentPathDFS.copy())
+                    test = self.pathDFS.copy()
+                    del self.pathDFS[-1]  
+
+                    countBack = -1
+                    currentTest = self.pathDFS.copy()
+
+                    location = self.goBack(test, countBack, location, currentTest)
+                    # for l_idx in reversed(range(self.pathDFS[len(self.pathDFS)-1])):
+                    #     currentLocation = self.map[str(l_idx+1)]
+                    #     countBack+=1
+                    #     for w_idx in range(len(self.map[str(location)])):
+                    #         currentWeight = currentLocation[w_idx]
+                    #         currentTest.append(currentWeight)
+                    #         if test != currentTest:
+                    #             # neighbor = currentWeight
+                    #             location = currentWeight
+
+                    ## if there was an update to the location remove the most
+                    ## recent subpaths that are done then add the connection
+                    ## between the current location and the most recent location
+                    
+                    # if countBack > 0:
+                    #     skip = True
+                    #     for i in range(countBack):
+                    #         if skip:
+                    #             del self.pathDFS[-1]
+                    #             skip = False
+                    #         del self.currentPathDFS[-1]
+
+                    #     last = self.pathDFS[len(self.pathDFS)-1]
+                    #     self.pathDFS.append(location)
+                    #     self.currentPathDFS.append(str(last)+"-"+str(location))
+
+                    if test == currentTest:
+                        self.shouldExitDFS = True
+                    # for i in range(0, 11):
+                    #     if neighbor+1 in self.map[str(location)]:
+                    #         neighbor = neighbor+1
+                    # if test[len(test)-1] == neighbor:
+                    #     self.shouldExitDFS = True
+                if location == 11:
+                    self.shouldExitDFS = True
                 self.DFS(visited, neighbor)
 
 
     def getFullPath(self, currentPaths):
         '''
-        This is very bad. Gathers adjecent paths to solve for the "effiecent route"
-        part of this question. Also plotting needs this.
+        This is very bad. 
+        Gathers adjecent paths to solve for the "effiecent route"
+        part of this question. Also used to create the pairing for the weights.
+        Combines or extends all paths to represent the location to be traveled 
+        The idea is to creat this weights array: [1-3, 3-5, 5-8, 8-11] to test for shortest distance.
         '''
         fullPaths = self.fullPaths.copy()
         for path in currentPaths:
@@ -169,7 +262,7 @@ class TSP():
 
             current = self.queBFS.pop(0)
             # path.append(current)
-            print(current, end= " ")
+            # print(current, end= " ")
             
             for neighbor in self.map[str(current)]:
                 paths.append(str(current)+"-"+str(neighbor))
@@ -207,10 +300,11 @@ class TSP():
 
         self.calculateWeights()
 
-        self.BFS(self.visitedBFS, "1")
-        bestDistanceBFS, bestPathBFS =  self.calculateDistancesBFS()
+        # self.BFS(self.visitedBFS, "1")
+        # bestDistanceBFS, bestPathBFS =  self.calculateDistancesBFS()
 
-        # self.DFS(self.visitedDFS, "1")
+        self.DFS(self.visitedDFS, "1")
+        bestDistanceDFS, bestPathDFS =  self.calculateDistancesBFS()
         
         # permutations = list(itertools.permutations(self.locs, self.dataCount))
         
@@ -235,7 +329,7 @@ class TSP():
         plt.plot([x[0] for x in actualPath],[x[1] for x in actualPath])
         plt.show()
 
-        print("Shortest Distance: {:.2f}\nPath of Travel: {}".format(bestDistanceBFS, str(bestPathBFS)))
+        print("Shortest Distance: {:.2f}\nPath of Travel: {}\nActual Path: {}".format(bestDistanceBFS, str(bestPathBFS), str(actualPath)))
         print("⚶"*90)
 
 def inputParser():
@@ -253,11 +347,11 @@ if __name__ == "__main__":
     # parser = inputParser()
     # tsp = TSP("11", parser.verbose)
     
-    tsp = TSP("11", True)
+    tsp = TSP("11", False)
 
     # t0 = time.time()
     
     tsp.travelPerson()
     # t1 = time.time()
-    print(t1-t0)
+    # print(t1-t0)
 
