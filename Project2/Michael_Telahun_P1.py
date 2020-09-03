@@ -126,19 +126,41 @@ class TSP():
         between the current location and the most recent location.
         '''
 
+        wentBack = False
+        isFirst = True
+        isBreak = False
         for l_idx in reversed(range(self.pathDFS[len(self.pathDFS)-1])):
-            currentLocation = self.map[str(l_idx+1)]
-            countBack+=1
-            for w_idx in range(len(self.map[str(location)])):
-                currentWeight = currentLocation[w_idx]
-                currentTest.append(currentWeight)
-                if test != currentTest:
-                    # neighbor = currentWeight
-                    location = currentWeight
+            if isBreak:
+                break
+            if l_idx+1 in self.pathDFS:
+                ## remove a location if all adj are visited
+                if l_idx+1 != test[-1] and not isFirst:
+                    # del test[-1]
+                    del currentTest[-1]
+                currentLocations = self.map[str(l_idx+1)]
+                countBack+=1
+                # if wentBack:
+
+                # for w_idx in range(len(self.map[str(location)])):
+                for w_idx in range(len(self.map[str(l_idx+1)])):
+                    currentWeight = currentLocations[w_idx]
+                    currentTest.append(currentWeight)
+                    if test != currentTest:
+                        # neighbor = currentWeight
+                        location = currentWeight
+                        isBreak = True
+                        break
+                    else:
+                        del currentTest[-1]
+                        if isFirst:
+                            del test[-1]
+                            isFirst = False
+                        wentBack = True
+
 
         if countBack > 0:
             skip = True
-            for i in range(countBack):
+            for i in range(countBack+1):
                 if skip:
                     del self.pathDFS[-1]
                     skip = False
@@ -152,7 +174,6 @@ class TSP():
 
     def DFS(self, visited, location):
         
-            
         while not self.shouldExitDFS:
             print(location)
             visited.append(str(location))
@@ -170,7 +191,7 @@ class TSP():
                     countBack = -1
                     currentTest = self.pathDFS.copy()
 
-                    location = self.goBack(test, countBack, location, currentTest)
+                    neighbor = self.goBack(test, countBack, location, currentTest)
                     # for l_idx in reversed(range(self.pathDFS[len(self.pathDFS)-1])):
                     #     currentLocation = self.map[str(l_idx+1)]
                     #     countBack+=1
@@ -204,7 +225,7 @@ class TSP():
                     #         neighbor = neighbor+1
                     # if test[len(test)-1] == neighbor:
                     #     self.shouldExitDFS = True
-                if location == 11:
+                if neighbor == 11:
                     self.shouldExitDFS = True
                 self.DFS(visited, neighbor)
 
