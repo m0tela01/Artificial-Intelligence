@@ -16,7 +16,7 @@ class TSP():
     '''
     Traveling sales person class.
     '''
-    def __init__(self, locationFile, verbose=False):
+    def __init__(self, mode, verbose=False):
         '''
         Initialize class & properties.
         '''
@@ -31,11 +31,12 @@ class TSP():
         ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
         self.perms = []
-        self.locationsFile = locationFile + "PointDFSBFS.tsp"
+        self.locationsFile = "11PointDFSBFS.tsp"#locationFile + "PointDFSBFS.tsp"
         # self.locationsFile = "Random" + locationFile + ".tsp"
         self.verbose = verbose
 
         ## project 2
+        self.mode = mode
         self.visitedDFS = []#set()
         self.visitedBFS = []
         self.queBFS = []
@@ -55,7 +56,7 @@ class TSP():
         self.weights = {
         }
         self.fullPaths = []
-        self.completePaths = []#set()
+        self.completePaths = set()
 
         self.pathDFS = [1]
         self.fullPathDFS = []
@@ -99,6 +100,9 @@ class TSP():
         return math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
     
     def calculateWeights(self):
+        '''
+        Calculate the input weights for the adjacent neighbors of each node.
+        '''
         for key, adjacents in self.map.items():
             for adjacent in adjacents:
                 distance = self.elucidianDistance(self.locs[int(key)-1], self.locs[int(adjacent)-1])
@@ -117,10 +121,39 @@ class TSP():
         dist += self.elucidianDistance(permutations[len(permutations)-1], permutations[0])
         return dist
 
+    
+    def dfsSearch(self, test, countBack, location, currentTest):
+        '''
+        Another attempt at trying to complete the backtracking method.
+        This function was supposed to be entirely based off of depth and 
+        be much more effiencet and straightforward but it did not compute correctly.
+        '''
+        depth = 0
+        newWeight = 0
+        newDepth = True
+        for l_idx in reversed(range(test[len(test)-1])):
+            back = test[len(test)-2]
+            while l_idx != back:
+                l_idx -= 1
+
+            if newDepth:
+                depth += 1
+                newDepth = True
+
+            for w_idx in range(len(self.map[str(l_idx)])):
+                weightAtLocation = self.map[str(w_idx)]
+                if weightAtLocation != 11:
+                    newWeight = weightAtLocation
+                    
+                    newDepth = False
+                    depth = 0
+
+
 
 
     def goBack(self, test, countBack, location, currentTest):
         '''
+        This is an attempt at trying to complete the backtracking method.
         If there was an update to the location remove the most
         recent subpaths that are completed then add the connection
         between the current location and the most recent location.
@@ -129,6 +162,7 @@ class TSP():
         wentBack = False
         isFirst = True
         isBreak = False
+        currentSubSet = []
         for l_idx in reversed(range(self.pathDFS[len(self.pathDFS)-1])):
             if isBreak:
                 break
@@ -173,6 +207,13 @@ class TSP():
         return location
 
     def DFS(self, visited, location):
+        '''
+        This is the core of the DFS search that contains the skelton of the 
+        algorithm. It should have a way for finding the sub path based on a 
+        backtracking method. The implemention of the back tracking is needed to
+        consider all the possible visited sub paths on a given "parent" complete
+        path.
+        '''
         
         while not self.shouldExitDFS:
             print(location)
@@ -192,39 +233,9 @@ class TSP():
                     currentTest = self.pathDFS.copy()
 
                     neighbor = self.goBack(test, countBack, location, currentTest)
-                    # for l_idx in reversed(range(self.pathDFS[len(self.pathDFS)-1])):
-                    #     currentLocation = self.map[str(l_idx+1)]
-                    #     countBack+=1
-                    #     for w_idx in range(len(self.map[str(location)])):
-                    #         currentWeight = currentLocation[w_idx]
-                    #         currentTest.append(currentWeight)
-                    #         if test != currentTest:
-                    #             # neighbor = currentWeight
-                    #             location = currentWeight
-
-                    ## if there was an update to the location remove the most
-                    ## recent subpaths that are done then add the connection
-                    ## between the current location and the most recent location
-                    
-                    # if countBack > 0:
-                    #     skip = True
-                    #     for i in range(countBack):
-                    #         if skip:
-                    #             del self.pathDFS[-1]
-                    #             skip = False
-                    #         del self.currentPathDFS[-1]
-
-                    #     last = self.pathDFS[len(self.pathDFS)-1]
-                    #     self.pathDFS.append(location)
-                    #     self.currentPathDFS.append(str(last)+"-"+str(location))
 
                     if test == currentTest:
                         self.shouldExitDFS = True
-                    # for i in range(0, 11):
-                    #     if neighbor+1 in self.map[str(location)]:
-                    #         neighbor = neighbor+1
-                    # if test[len(test)-1] == neighbor:
-                    #     self.shouldExitDFS = True
                 if neighbor == 11:
                     self.shouldExitDFS = True
                 self.DFS(visited, neighbor)
@@ -232,7 +243,7 @@ class TSP():
 
     def getFullPath(self, currentPaths):
         '''
-        This is very bad. 
+        This is feels very bad. 
         Gathers adjecent paths to solve for the "effiecent route"
         part of this question. Also used to create the pairing for the weights.
         Combines or extends all paths to represent the location to be traveled 
@@ -249,6 +260,12 @@ class TSP():
                             self.completePaths.add(partialPath+"-"+path)
 
     def calculateDistancesBFS(self):
+        '''
+        Mostly due to the format of the generated paths this function converts the
+        string representation of the complete paths to be hashed by the graph or map
+        dictionary containing the weights and distance measures from each location to
+        its adjacent neighbors.
+        '''
         best = 999999
         resultPath = []
 
@@ -268,6 +285,11 @@ class TSP():
 
 
     def BFS(self, visited, location):
+        '''
+        Simple shell for the BFS solution. It contains the fundamental aspect of the 
+        BFS search algorithm. It uses the function getfullpath to compute the set of
+        subsets for based on the current node and its adjacent values.
+        '''
         visited.append(location)
         self.queBFS.append(location)
         paths = []
@@ -320,12 +342,13 @@ class TSP():
         self.readData()
 
         self.calculateWeights()
-
-        # self.BFS(self.visitedBFS, "1")
-        # bestDistanceBFS, bestPathBFS =  self.calculateDistancesBFS()
-
-        self.DFS(self.visitedDFS, "1")
-        bestDistanceDFS, bestPathDFS =  self.calculateDistancesBFS()
+        
+        if self.mode == "bfs":
+            self.BFS(self.visitedBFS, "1")
+            bestDistanceBFS, bestPathBFS =  self.calculateDistancesBFS()
+        else:
+            self.DFS(self.visitedDFS, "1")
+            bestDistanceDFS, bestPathDFS =  self.calculateDistancesBFS()
         
         # permutations = list(itertools.permutations(self.locs, self.dataCount))
         
@@ -348,17 +371,18 @@ class TSP():
         a = list(set([int(s) for s in '-'.join(bestPathBFS).split("-") if s.isdigit()]))
         actualPath = [self.locs[i-1] for i in a]
         plt.plot([x[0] for x in actualPath],[x[1] for x in actualPath])
-        plt.show()
+        # plt.show()
 
         print("Shortest Distance: {:.2f}\nPath of Travel: {}\nActual Path: {}".format(bestDistanceBFS, str(bestPathBFS), str(actualPath)))
         print("⚶"*90)
+
 
 def inputParser():
     '''
     Simple command line input parser.
     '''
     parser = argparse.ArgumentParser()
-    # parser.add_argument("locationCount", type=str)
+    parser.add_argument("modeInput", type=str)
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
@@ -366,13 +390,15 @@ def inputParser():
 ###############
 if __name__ == "__main__":
     # parser = inputParser()
+    
     # tsp = TSP("11", parser.verbose)
     
-    tsp = TSP("11", False)
+    # tsp = TSP(parser.modeInput, parser.verbose)
+    tsp = TSP("bfs",False)
 
-    # t0 = time.time()
+    t0 = time.time()
     
     tsp.travelPerson()
-    # t1 = time.time()
-    # print(t1-t0)
+    t1 = time.time()
+    print(t1-t0)
 
