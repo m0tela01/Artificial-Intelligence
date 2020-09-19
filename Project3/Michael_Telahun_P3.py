@@ -88,13 +88,28 @@ class TSP():
 
 
     def firstLocation(self):
-        firstIdx = random.randint(0, len(self.locs))
+        '''
+        This creates a random number for the first location that will be used in the cycle.
+        It adds this to the list twice because this is the first and last location in a cycle
+        Then it removes it from the list of locations. An integer could be specified instead of random.
+        '''
+        firstIdx = random.randint(1, len(self.locs)) - 1
         firstLocation = self.locs.pop(firstIdx)
+        
+        print("⚶"*90)
+        print("Inital Location Index: {}\nInital Location: {}".format(firstIdx, firstLocation))
+        print("⚶"*90)
+
         self.cycle.append(firstLocation)
         self.cycle.append(firstLocation)
         self.perms.append(self.cycle)
 
     def findNextClosest(self):
+        '''
+        For the first part of this method it is handling the case when there is only the inital location.
+        It finds the second location that will be closest to the first one and inserts in between the head and tail.
+        The latter half performs the same thing for every remaining location.
+        '''
         currentDistances = []
         if len(self.cycle) == 2:
             cycle = self.cycle.copy()
@@ -102,6 +117,7 @@ class TSP():
                 currentDistances.append(self.elucidianDistance(cycle[0], location))
             currentMinDistanceIdx = sorted(range(len(currentDistances)), key=currentDistances.__getitem__)[0]
             self.cycle = [cycle[0], self.locs[currentMinDistanceIdx], cycle[1]]
+            self.locs.pop(currentMinDistanceIdx)
             self.perms.append(self.cycle)
         else:
             currentLeast = float('inf')
@@ -109,90 +125,44 @@ class TSP():
             currentBestDist = float('inf')
             bestCycle = []
             bestLocation = [-1,-1]
-
-
             cycle = self.cycle.copy()
 
             actualBestCycle, actualBestDist, actualBestLocation = [], float('inf'), [-1,-1]
+            ## Every remaining location
             for location in self.locs:
+                ## Get the best cycle using this new location
                 bestCycle, currentBestDist, bestLocation = self.insertMinDistance(location, bestCycle, currentBestDist, bestLocation)
+                ## if its better than what is present make it the best
                 if currentBestDist < actualBestDist:
                     actualBestCycle, actualBestDist, actualBestLocation = bestCycle, currentBestDist, bestLocation
+            ## for plotting
             self.perms.append(bestCycle)
+            ## update the new cycle with the new cycle just created
             self.cycle = bestCycle
+            ## remove the location just used
             if bestLocation != [-1,-1]:
                 self.locs.remove(bestLocation)
 
-            #     for cyc in cycle:
-            #         currentDistances.append(self.elucidianDistance(location, cyc))
-            # shortestLocationIdx = sorted(range(len(currentDistances)), key=currentDistances.__getitem__)[0]
-            # nextShortestLocation = self.locs[shortestLocationIdx]
-            # self.insertMinDistance(nextShortestLocation, bestCycle, currentBestDist)
 
     def insertMinDistance(self, nextShortestLocation, bestCycle, currentBestDist, bestLocation):
-
-        # print("Remaining Locations: {}".format(len(self.locs)))
-        
-        
+        '''
+        Calculates the actual cycle distance and deals with inserting the new location into each 
+        position/index of the cycle execept the first and last. 
+        Returns the best cycle, best distance, best current location or node for connecting.
+        '''
+        ## for every position in the cycle
         for i in range(1, len(self.cycle) - 1):
             test = self.cycle.copy()
+            ## insert the new location into the ith index
             test.insert(i, nextShortestLocation)
+            ## calculate the new distance
             currentCycleTestDistance = self.calculateDistances(test)
+            ## if this distance at ith location is best: store all the information
             if currentCycleTestDistance < currentBestDist:
                 currentBestDist = currentCycleTestDistance
                 bestCycle = test
                 bestLocation = nextShortestLocation
         return bestCycle, currentBestDist, bestLocation
-
-        # self.perms.append(bestCycle)
-        # self.perms.append(self.cycle)
-
-
-    def cycleDistance(self, cycle):
-        dist = 0.0
-        for i in range(0, len(cycle)-2):
-            dist+= self.elucidianDistance(cycle[i], cycle[i+1])
-        return dist
-
-    # def findNextClosest(self):
-    #     currentDistances = []
-    #     if len(self.cycle) == 2:
-    #         cycle = self.cycle.copy()
-    #         for location in self.locs:
-    #             currentDistances.append(self.elucidianDistance(cycle[0], location))
-    #         currentMinDistanceIdx = sorted(range(len(currentDistances)), key=currentDistances.__getitem__)[0]
-    #         self.cycle = [cycle[0], self.locs[currentMinDistanceIdx], cycle[1]]
-    #         self.perms.append(self.cycle)
-    #     else:
-    #         cycle = self.cycle.copy()
-    #         for location in self.locs:
-    #             for cyc in cycle:
-    #                 currentDistances.append(self.elucidianDistance(location, cyc))
-    #         shortestLocationIdx = sorted(range(len(currentDistances)), key=currentDistances.__getitem__)[0]
-    #         nextShortestLocation = self.locs[shortestLocationIdx]
-
-
-    # def insertMinDistance(self, nextShortestLocation):
-    #     currentLeast = float('inf')
-    #     test = self.cycle.copy()
-    #     currentBestCycle = float('inf')
-    #     bestCycle = []
-
-    #     print("Remaining Locations: {}".format(len(self.locs)))
-        
-        
-    #     for i in range(1, len(self.cycle) - 1):
-    #         test = self.cycle.copy()
-    #         test.insert(i, nextShortestLocation)
-    #         currentCycleTestDistance = self.cycleDistance(test)
-    #         if currentCycleTestDistance < currentBestCycle:
-    #             currentBestCycle = currentCycleTestDistance
-    #             bestCycle = test
-
-    #     self.perms.append(bestCycle)
-    #     # self.perms.append(self.cycle)
-    
-
 
     def travelPerson(self):
         '''
@@ -204,23 +174,11 @@ class TSP():
         self.firstLocation()
         while self.locs:
             self.findNextClosest()
-
-
-        permutations = list(itertools.permutations(self.locs, self.dataCount))
-        
-
-        ## find the distance of each permutation location to location, aggregate, minimum
-        ## store index of permulations list as value and aggregate as key?
-        for i in range(0, len(permutations)):
-            self.dists.append(self.calculateDistances(permutations[i]))
-
+       
         if self.verbose:
-            # self.perms = permutations
             self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
             anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=10)#, blit=True)
             plt.show()
-
-        ## this
 
         print("⚶"*90)
         print("Shortest Distance: {:.2f}\nPath of Travel: {}".format(self.calculateDistances(self.cycle), str(self.cycle)))
@@ -238,12 +196,12 @@ def inputParser():
 
 ###############
 if __name__ == "__main__":
-    # parser = inputParser()
-    # tsp = TSP(parser.locationCount, parser.verbose)
+    parser = inputParser()
+    tsp = TSP(parser.locationCount, parser.verbose)
 
 
     t0 = time.time()
-    tsp = TSP("30",True)# parser.verbose)
+    # tsp = TSP("40",True)# parser.verbose)
     tsp.travelPerson()
     t1 = time.time()
     print(t1-t0)

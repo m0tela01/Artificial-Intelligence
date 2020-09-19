@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
 
     t0 = time.time()
-    tsp = TSP("11",False)# parser.verbose)
+    tsp = TSP("11",True)# parser.verbose)
     tsp.travelPerson()
     t1 = time.time()
     print(t1-t0)
