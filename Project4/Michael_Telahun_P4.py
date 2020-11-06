@@ -27,11 +27,11 @@ class TSP():
         self.dists = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
+        self.locationsFile = 'Random100.tsp'#"Random100.tsp"
 
         ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
         self.perms = []
-        self.locationsFile = "Random100.tsp"
         self.verbose = verbose
 
         ## project3
@@ -39,13 +39,14 @@ class TSP():
         # self.cycleDistance = float("inf")
 
         ## project4
-        self.iterations = iterations
+        self.iterations = int(iterations)
         self.mutationRate = 0.1
         self.permuationIndicies = []
         self.bestPermutation = []
         self.currentGlobalFitness = float("inf")
         self.previousGlobalFitness = float("inf")
         self.fitnesses = [0 for i in range(100)]
+        self.globalFitnesses = []
         self.first, self.last = [], []
         self.selectedPopulation = []
 
@@ -101,8 +102,6 @@ class TSP():
     '''#############################################################
     ################################################################
     '''
-    def clonse(self, permuation):
-        return permuation, self.currentFitness
 
     def getFirstAndLast(self):
         self.first, self.last = self.locs[0], self.locs[len(self.locs)-1]
@@ -112,46 +111,48 @@ class TSP():
         Global fitness is defined as the total distance of a permuation of the
         dataset. So we want to minize this global value. The smallest global fit
         is the optimal path.
-        '''        
+        '''
         newGlobalFitness = self.calculateDistances(permutations)
+        self.globalFitnesses.append(newGlobalFitness)
         if self.currentGlobalFitness > newGlobalFitness:
             self.currentGlobalFitness = newGlobalFitness
-            self.bestPermutation = self.locs
+            self.bestPermutation = permutations
 
-    def fitness(self, perm):
+
+    def fitness(self, locs, fitnesses):
         '''
         Determine the current sample's fitness  
         '''
         ## do some operation
 
-        for i in range(100) - 1:
-            self.fitnesses[i] = self.elucidianDistance(self.locs[i], self.locs[i+1])
+        # for i in range(5):
+        for i in range(99):
+            fitnesses[i] = self.elucidianDistance(locs[i], locs[i+1])
         
-        self.fitnesses[len(self.fitnesses)-1] = self.elucidianDistance(self.locs[len(self.locs)-1], self.locs[0])
+        fitnesses[len(fitnesses)-1] = self.elucidianDistance(locs[len(locs)-1], locs[0])
+        return fitnesses
 
 
-    def getChildren(self, parent1, parent2):
-        '''
-        Get the locations near the parents that could be crossed over.
-        '''
-        children = []
 
-        return children
-
-    def selection(self, cullingPercent=50):
+    def selection(self, fitnesses, selectionPercent=90):
         '''
         Selection will occur to a random portion of the population. We want to
         minimize the path size so we will randomly select <= 50% of the population
         that is the "worst" for the optimal path.
         '''
         ## percent of population for selection
-        selectionPopulation = random.randint(0, cullingPercent)
-        locations = np.array(self.locs.copy())
+        # selectionPopulation = random.randint(0, cullingPercent)
 
-        self.selectedPopulation = list(locations[np.argsort(locations)[-selectionPopulation:]])
+        # locations = np.array(self.locs.copy())
+        # self.selectedPopulation = list(locations[np.argsort(locations)[-selectionPopulation:]])
+        locations = np.array(fitnesses.copy())
+        selectedPopulation = list(locations[np.argsort(locations)[-selectionPercent:]])
+        return selectedPopulation
 
 
-    def crossover(self, perm1, perm2, cullingPercent):
+    # def crossover(self, perm1, perm2, cullingPercent):
+    def crossover(self, locs, selectedPopulation, fitnesses, crossOverChance=0.8, crossOverPercent=10):
+    
         '''
         A crossover is defined in this program as a location somewhere 
         in the selection population. The crossover takes the city pairs that
@@ -159,57 +160,116 @@ class TSP():
         is done by swapping an index with the new one. This means more than one 
         cross over can occur.
         '''
-        ## do some crossover
-        children = self.getChildren(perm1, perm2)
-        locs = np.array(self.locs)
-        ## smallest ones are better so they go first since selected first (fitness is higher)
-        selectedIndicies = list(reversed(locs.argsort()[-cullingPercent:][::-1]))
-        boi1 = self.selectedPopulation.pop(0)
-        boi2 = self.selectedPopulation.pop(0)
-        boiIdx1 = selectedIndicies.pop(0)
-        boiIdx2 = selectedIndicies.pop(0)
+        
+        # locs = np.array(self.locs)
+        locsIdxs = np.array(fitnesses)
+        ## smallest ones are better so they go first since fitness is higher
+        selectedIndicies = list(reversed(locsIdxs.argsort()[-crossOverPercent:][::-1]))
+        # boi1 = selectedPopulation.pop(0)
+        # boi2 = selectedPopulation.pop(0)
+        # boiIdx1 = selectedIndicies.pop(0)
+        # boiIdx2 = selectedIndicies.pop(0)
 
-        ## swap if chance allows
+        ## swap if chance allows (high chance of swapping) --> mating should almost 
+        ## always occur but in some cases you could say there is complications
         ## could increase swap chance as the fuction continues as the 
         ## selected group progressively is worse so we want more of these to swap
         while selectedIndicies:
-            if random.random() > 0.3:
-                self.locs[boiIdx1] = boi2
-                self.locs[boiIdx2] = boi1
-
-            boi1 = self.selectedPopulation.pop(0)
-            boi2 = self.selectedPopulation.pop(0)
+            boi1 = selectedPopulation.pop(0)
+            boi2 = selectedPopulation.pop(0)
             boiIdx1 = selectedIndicies.pop(0)
-            boiIdx2 = selectedIndicies.pop(0)            
+            boiIdx2 = selectedIndicies.pop(0)
+            if random.random() > crossOverChance:
+                a = locs[boiIdx2]
+                b = locs[boiIdx1]
+                # a = locs[self.fitnesses.index(boi2)]
+                # b = locs[self.fitnesses.index(boi1)]
+                if a != b:
+                    locs[boiIdx1] = a
+                    locs[boiIdx2] = b
+                else:
+                    print()
+                
 
-        ## do the mutation
-        mutation = self.mutation(perm1, perm2, children)
-        
-        return mutation
+        ## reset the first and last locations (shouldnt have swapped)
+        # lastIdx = locs.index(self.last)
+        # startIdx = locs.index(self.first)
+        # _ = locs.pop(lastIdx)
+        # _ = locs.pop(startIdx)
+        # locs.insert(0,self.first)
+        # locs.append(self.last)
+
+        locs.remove(self.last)
+        locs.remove(self.first)
 
 
-    def mutation(self, parent1, parent2, children):
+        locs.insert(0,self.first.copy())
+        locs.append(self.last.copy())
+
+        # self.fitnesses = [0 for i in range(100)]
+        self.fitnesses = [0 for i in range(6)]
+        return locs
+
+
+    # def mutation(self, parent1, parent2, children):
+    def mutation(self, locs, mutationChance=0.1, mutationPercent=50):
         '''
         If a crossover is to occur then the mutation will be the new location
-        that was given by  the two permuations
+        that was given by the a second location randomly selected with a random independent chance.
         '''
-        mutation = parent1+parent2
-        return mutation
+        idxs = random.sample(range(mutationPercent), mutationPercent)
+        # idxs = random.sample(range(100), 100)
+        # idxs = random.sample(range(6), 6)
+        for i in range(mutationPercent):
+        # for i in range(len(locs)):
+            if random.random() > mutationChance:
+                # idx = random.sample(range(100), 1)[0]
+                b = locs[idxs[i]]
+                c = locs[i]
+                if b != c:
+                    locs[i] = b
+                    locs[idxs[i]] = c
 
-    def evolve(self):
-        cullingPercent = 50
-        ## find the current fitnesses
-        for perm in self.locs:
-            self.fitness(perm)
+
+        ## reset the first and last locations (shouldnt have swapped)
+        # lastIdx = locs.index(self.last)
+        # startIdx = locs.index(self.first)
+        # last = locs.pop(lastIdx)
+        # start = locs.pop(startIdx)
+        locs.remove(self.last)
+        locs.remove(self.first)
+
+
+        locs.insert(0,self.first.copy())
+        locs.append(self.last.copy())
+        return locs
+
+    def evolve(self, selectionPercent=90, crossOverPercent=50, crossOverChance=0.8, mutationPercent=20, mutationChance=0.5):
+        locs = self.locs.copy()
+
+        ## find the fitnesses per location
+        fitnesses = [0 for i in range(100)]
+        # fitnesses = [0 for i in range(6)]
+        fitnesses = self.fitness(locs, fitnesses)
         
         ## calculate current global fitness
-        self.globalFitness(self.locs)
+        self.globalFitness(locs)
 
         ## do selection or dating process
+        selectedPopulation = self.selection(fitnesses, selectionPercent)
 
         ## perform crossover
+        locs = self.crossover(locs, selectedPopulation, fitnesses, crossOverChance, crossOverPercent)
 
         ## mutate
+        locs = self.mutation(locs, mutationChance, mutationPercent)
+
+        ## evaluation if worse revert to old state?
+
+        ## add for plotting
+        self.perms.append(locs)
+        
+        self.locs = locs
 
 
 
@@ -223,6 +283,7 @@ class TSP():
         locs = self.locs.copy()
         random.seed(42)
         indicies = random.sample(range(100), 100)
+        # indicies = random.sample(range(6), 6)
         self.locs = [locs[i] for i in indicies]
 
 
@@ -314,22 +375,40 @@ class TSP():
         self.startRandom()
         self.getFirstAndLast()
 
-        ## combines all genetic methods for the desired number of 
-        ## iterations in a 
+        ## for plotting
+        self.perms.append(self.locs)
+
+        bestFitnesses = []
+        ## combines all genetic methods for the desired number of iterations
         for i in range(self.iterations):
             self.evolve()
+            
+            print("Current Best Fitness: ", self.currentGlobalFitness)
+            # print("Current Fitness: ", self.globalFitnesses[len(self.globalFitnesses)-1])
+            bestFitnesses.append(self.currentGlobalFitness)
 
-        self.firstLocation()
-        while self.locs:
-            self.findNextClosest()
-       
-        if self.verbose:
-            self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
-            anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=10)#, blit=True)
-            plt.show()
+
+
+        # if self.verbose:
+        #     self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
+        #     anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=100)#, blit=True)
+        #     plt.show()
+        
+        # xb,yb = np.array(bestFitnesses)[:,0], np.array(bestFitnesses)[:,1]
+        # xb,yb = np.array(bestFitnesses)[:,0], np.array(bestFitnesses)[:,1]
+        plt.show()
+        plt.plot(np.array([i for i in range(len(bestFitnesses))]), np.array(bestFitnesses))
+        plt.plot(np.array([i for i in range(len(bestFitnesses))]), np.array(self.globalFitnesses))
+        plt.show()
+        
+        
+        
+        x,y = np.array(self.bestPermutation)[:,0], np.array(self.bestPermutation)[:,1]
+        plt.plot(x,y)
+        plt.show()
 
         print("⚶"*90)
-        print("Shortest Distance: {:.2f}\nPath of Travel: {}".format(self.calculateDistances(self.cycle), str(self.cycle)))
+        print("Shortest Distance: {:.2f}\nPath of Travel: {}".format(self.currentGlobalFitness, str(self.bestPermutation)))
         print("⚶"*90)
 
 def inputParser():
@@ -344,12 +423,12 @@ def inputParser():
 
 ###############
 if __name__ == "__main__":
-    parser = inputParser()
-    tsp = TSP(int(parser.iterations), parser.verbose)
+    # parser = inputParser()
+    # tsp = TSP(int(parser.iterations), parser.verbose)
 
 
     t0 = time.time()
-    # tsp = TSP("40",True)# parser.verbose)
+    tsp = TSP(50000, True)# parser.verbose)
     tsp.travelPerson()
     t1 = time.time()
     print(t1-t0)
