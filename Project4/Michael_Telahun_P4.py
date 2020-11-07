@@ -16,7 +16,7 @@ class TSP():
     '''
     Traveling sales person class.
     '''
-    def __init__(self, iterations, verbose=False):
+    def __init__(self, iterations, crossoverPercent, mutationChance, verbose=False):
         '''
         Initialize class & properties.
         '''
@@ -39,6 +39,8 @@ class TSP():
         # self.cycleDistance = float("inf")
 
         ## project4
+        self.crossoverpercent, self.mutationchance = crossoverPercent, mutationChance
+
         self.iterations = int(iterations)
         self.mutationRate = 0.1
         self.permuationIndicies = []
@@ -247,6 +249,8 @@ class TSP():
     def evolve(self, selectionPercent=90, crossOverPercent=50, crossOverChance=0.8, mutationPercent=20, mutationChance=0.5):
         locs = self.locs.copy()
 
+        inputCrossOverPercent, inputMutationchance = self.crossoverpercent, self.mutationchance
+
         ## find the fitnesses per location
         fitnesses = [0 for i in range(100)]
         # fitnesses = [0 for i in range(6)]
@@ -259,10 +263,10 @@ class TSP():
         selectedPopulation = self.selection(fitnesses, selectionPercent)
 
         ## perform crossover
-        locs = self.crossover(locs, selectedPopulation, fitnesses, crossOverChance, crossOverPercent)
+        locs = self.crossover(locs, selectedPopulation, fitnesses, crossOverChance,  self.crossoverpercent)
 
         ## mutate
-        locs = self.mutation(locs, mutationChance, mutationPercent)
+        locs = self.mutation(locs, self.mutationchance, mutationPercent)
 
         ## evaluation if worse revert to old state?
 
@@ -389,20 +393,21 @@ class TSP():
 
 
 
-        # if self.verbose:
-        #     self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
-        #     anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=100)#, blit=True)
-        #     plt.show()
+        if self.verbose:
+            self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
+            anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=100)#, blit=True)
+            plt.show()
         
-        # xb,yb = np.array(bestFitnesses)[:,0], np.array(bestFitnesses)[:,1]
-        # xb,yb = np.array(bestFitnesses)[:,0], np.array(bestFitnesses)[:,1]
-        plt.show()
+
+        # plt.show()    ## for debugging
+
+        ## plots the iterations of search
         plt.plot(np.array([i for i in range(len(bestFitnesses))]), np.array(bestFitnesses))
         plt.plot(np.array([i for i in range(len(bestFitnesses))]), np.array(self.globalFitnesses))
         plt.show()
         
         
-        
+        ## plots the trails path of travel
         x,y = np.array(self.bestPermutation)[:,0], np.array(self.bestPermutation)[:,1]
         plt.plot(x,y)
         plt.show()
@@ -417,19 +422,21 @@ def inputParser():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument("iterations", type=str)
+    parser.add_argument("crossoverPercent", type=str)
+    parser.add_argument("mutationChance", type=str)
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
 
 ###############
 if __name__ == "__main__":
-    # parser = inputParser()
-    # tsp = TSP(int(parser.iterations), parser.verbose)
+    parser = inputParser()
+    tsp = TSP(int(parser.iterations), int(parser.crossoverPercent), float(parser.mutationChance), parser.verbose)
 
 
-    t0 = time.time()
-    tsp = TSP(50000, True)# parser.verbose)
+    # t0 = time.time()
+    # tsp = TSP(50000, True)# parser.verbose)
     tsp.travelPerson()
-    t1 = time.time()
-    print(t1-t0)
+    # t1 = time.time()
+    # print(t1-t0)
 
