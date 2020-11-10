@@ -27,12 +27,13 @@ class TSP():
         self.dists = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
-        self.locationsFile = 'Random100.tsp'#"Random100.tsp"
+        self.locationsFile = 'Random10.tsp'#"Random100.tsp"
 
         ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
         self.perms = []
         self.verbose = verbose
+        self.colorIndex = 0
 
         ## project3
         self.cycle = []
@@ -76,6 +77,21 @@ class TSP():
         '''
         x,y = np.array(self.perms[i])[:,0], np.array(self.perms[i])[:,1]
         self.plot.set_data(x,y)
+        
+        if self.colorIndex == -1:
+            time.sleep(.500)
+            self.colorIndex +=1
+        
+        self.colorIndex +=1
+        if self.colorIndex == 1:
+            self.plot.set_color('mediumspringgreen')
+
+        elif self.colorIndex == 2:
+            self.plot.set_color('yellow')
+        else:
+            self.plot.set_color('orange')
+            self.colorIndex = -1
+        # self.plt.set_cmap = 'RdYlGn'
         return self.plot,
             
     def elucidianDistance(self, arr1, arr2):
@@ -246,34 +262,91 @@ class TSP():
         locs.append(self.last.copy())
         return locs
 
-    def evolve(self, selectionPercent=99, crossOverPercent=50, crossOverChance=0.8, mutationPercent=20, mutationChance=0.5):
+    def evolve(self, selectionPercent=90, crossOverPercent=50, crossOverChance=0.8, mutationPercent=20, mutationChance=0.5):
         locs = self.locs.copy()
 
-        inputCrossOverPercent, inputMutationchance = self.crossoverpercent, self.mutationchance
+        ### 11
+        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
 
-        ## find the fitnesses per location
-        fitnesses = [0 for i in range(100)]
-        # fitnesses = [0 for i in range(6)]
-        fitnesses = self.fitness(locs, fitnesses)
+
+        ### 22
+        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+
+
+        ### 44
+        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+
+
+        ### 77
+        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+
+
+        ### 97
+        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+
+
+        ### 222
+        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
         
-        ## calculate current global fitness
-        self.globalFitness(locs)
 
-        ## do selection or dating process
-        selectedPopulation = self.selection(fitnesses, selectionPercent)
+        selectionIdxs = random.sample(range(len(selectionPercents)-1), 3)
+        crossoverIdxs = random.sample(range(len(selectionPercents)-1), 3)
+        mutationIdxs = random.sample(range(len(mutationchances)-1), 3)
 
-        ## perform crossover
-        locs = self.crossover(locs, selectedPopulation, fitnesses, crossOverChance,  self.crossoverpercent)
+        curentLocs = self.locs.copy()
+        finalLocs = []
 
-        ## mutate
-        locs = self.mutation(locs, self.mutationchance, mutationPercent)
+        for i in range(0, 9):
 
-        ## evaluation if worse revert to old state?
+            inputCrossOverPercent, inputMutationchance = self.crossoverpercent, self.mutationchance
 
-        ## add for plotting
-        self.perms.append(locs)
+            ## find the fitnesses per location
+            fitnesses = [0 for i in range(100)]
+            # fitnesses = [0 for i in range(6)]
+            fitnesses = self.fitness(curentLocs, fitnesses)
+            
+            ## calculate current global fitness
+            self.globalFitness(curentLocs)
+
+            ## do selection or dating process
+            selectedPopulation = self.selection(fitnesses, selectionPercent)
+
+            ## perform crossover
+            locs = self.crossover(curentLocs, selectedPopulation, fitnesses, crossOverChance,  self.crossoverpercent)
+
+            ## mutate
+            locs = self.mutation(locs, self.mutationchance, mutationPercent)
+
+            ## evaluation if worse revert to old state?
+
+            ## add for plotting
+            self.perms.append(locs)
+            finalLocs.append(locs)
         
-        self.locs = locs
+        bestLocFitness = self.calculateDistances(curentLocs)
+        # bestLocFitnessOriginal = bestLocFitness
+        bestIdx = -1
+        for i, fl in enumerate(finalLocs):
+            flFitness = self.calculateDistances(fl)
+            if flFitness < bestLocFitness:
+                bestLocFitness = flFitness
+                bestIdx = i
+        if i != -1:
+            self.locs = finalLocs[i]
+        else:
+            self.locs = curentLocs
 
 
 
@@ -380,7 +453,7 @@ class TSP():
         self.getFirstAndLast()
 
         ## for plotting
-        self.perms.append(self.locs)
+        # self.perms.append(self.locs)
 
         bestFitnesses = []
         ## combines all genetic methods for the desired number of iterations
@@ -389,6 +462,15 @@ class TSP():
             
             print("Current Best Fitness: ", self.currentGlobalFitness)
             # print("Current Fitness: ", self.globalFitnesses[len(self.globalFitnesses)-1])
+            
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
+            bestFitnesses.append(self.currentGlobalFitness)
             bestFitnesses.append(self.currentGlobalFitness)
 
 
@@ -435,8 +517,8 @@ if __name__ == "__main__":
 
 
     # t0 = time.time()
-    # iterations, crossoverPercent, mutationChance, verbose=False
-    tsp = TSP(10000, crossoverPercent=16, mutationChance=0.14, verbose=True)# parser.verbose)
+    # tsp = TSP(50000, True)# parser.verbose)
+    tsp = TSP(500, crossoverPercent=16, mutationChance=0.14, verbose=True)
     tsp.travelPerson()
     # t1 = time.time()
     # print(t1-t0)
