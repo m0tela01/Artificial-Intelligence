@@ -16,10 +16,12 @@ class TSP():
     '''
     Traveling sales person class.
     '''
-    def __init__(self, iterations, crossoverPercent, mutationChance, verbose=False):
+    # def __init__(self, iterations, crossoverPercent, mutationChance, verbose=False):
+    def __init__(self, iterations, cityCount, verbose=False):
         '''
         Initialize class & properties.
         '''
+        
         self.DIMENSIONIndex = 4
         self.DATAIndex = 7
         self.dataCount = 0
@@ -27,7 +29,10 @@ class TSP():
         self.dists = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
-        self.locationsFile = 'Random10.tsp'#"Random100.tsp"
+        self.locationsFile = 'Random' + str(cityCount) + '.tsp'#"Random100.tsp"
+        
+        # self.cityCount = self.locationsFile.split('Random')[1].split('.')[0]
+        self.cityCount = int(cityCount)
 
         ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
@@ -40,7 +45,7 @@ class TSP():
         # self.cycleDistance = float("inf")
 
         ## project4
-        self.crossoverpercent, self.mutationchance = crossoverPercent, mutationChance
+        # self.crossoverpercent, self.mutationchance = crossoverPercent, mutationChance
 
         self.iterations = int(iterations)
         self.mutationRate = 0.1
@@ -48,7 +53,7 @@ class TSP():
         self.bestPermutation = []
         self.currentGlobalFitness = float("inf")
         self.previousGlobalFitness = float("inf")
-        self.fitnesses = [0 for i in range(100)]
+        self.fitnesses = [0 for i in range(self.cityCount)]
         self.globalFitnesses = []
         self.first, self.last = [], []
         self.selectedPopulation = []
@@ -88,6 +93,20 @@ class TSP():
 
         elif self.colorIndex == 2:
             self.plot.set_color('yellow')
+        elif self.colorIndex == 3:
+            self.plot.set_color('red')
+        elif self.colorIndex == 4:
+            self.plot.set_color('pink')
+        elif self.colorIndex == 5:
+            self.plot.set_color('purple')
+        elif self.colorIndex == 6:
+            self.plot.set_color('brown')
+        elif self.colorIndex == 7:
+            self.plot.set_color('green')
+        elif self.colorIndex == 8:
+            self.plot.set_color('gray')
+        elif self.colorIndex == 8:
+            self.plot.set_color('teal')
         else:
             self.plot.set_color('orange')
             self.colorIndex = -1
@@ -144,7 +163,7 @@ class TSP():
         ## do some operation
 
         # for i in range(5):
-        for i in range(99):
+        for i in range(self.cityCount - 1):
             fitnesses[i] = self.elucidianDistance(locs[i], locs[i+1])
         
         fitnesses[len(fitnesses)-1] = self.elucidianDistance(locs[len(locs)-1], locs[0])
@@ -266,43 +285,63 @@ class TSP():
         locs = self.locs.copy()
 
         ### 11
-        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
-        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+        
+        if self.cityCount == 11:
+            selectionPercents = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            crossoverPercents = [2, 4, 6, 8, 10]
+            mutationPercent = 4
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
 
 
         ### 22
-        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
-        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+        elif self.cityCount == 22:
+            selectionPercents = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+            crossoverPercents = [2, 4, 6, 8, 10, 12, 14]
+            mutationPercent = 2
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
 
 
         ### 44
-        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
-        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+        elif self.cityCount == 44:
+            selectionPercents = [31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+            crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+            mutationPercent = 6
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
 
 
         ### 77
-        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
-        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+        elif self.cityCount == 77:
+            selectionPercents = [67, 68, 69, 70, 71, 72, 73, 74, 75, 76]
+            crossoverPercents = [2, 4, 6, 8, 10, 12, 14]
+            mutationPercent = 6
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
 
 
         ### 97
-        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
-        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+        elif self.cityCount == 97:
+            selectionPercents = [80, 81, 82, 83, 84, 85, 86, 87, 88, 89]
+            crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+            mutationPercent = 16
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+
+
+        ### 100
+        elif self.cityCount == 100:
+            selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+            crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
 
 
         ### 222
-        selectionPercents = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-        crossoverPercents = [8, 10, 12, 14, 16, 18, 20]
-        mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
-        
+        else:
+            selectionPercents = [190, 191, 192, 193, 194, 195, 196, 197, 198, 199]
+            crossoverPercents = [18, 20, 22, 24, 26, 28, 20]
+            mutationPercent = 40
+            mutationchances =   [0.06, 0.08, 0.1, 0.12, 0.14, 0.16]
+
 
         selectionIdxs = random.sample(range(len(selectionPercents)-1), 3)
-        crossoverIdxs = random.sample(range(len(selectionPercents)-1), 3)
+        crossoverIdxs = random.sample(range(len(crossoverPercents)-1), 3)
         mutationIdxs = random.sample(range(len(mutationchances)-1), 3)
 
         curentLocs = self.locs.copy()
@@ -310,10 +349,10 @@ class TSP():
 
         for i in range(0, 9):
 
-            inputCrossOverPercent, inputMutationchance = self.crossoverpercent, self.mutationchance
+            inputCrossOverPercent, inputMutationchance = 8, 0.14 #self.crossoverpercent, self.mutationchance
 
             ## find the fitnesses per location
-            fitnesses = [0 for i in range(100)]
+            fitnesses = [0 for i in range(self.cityCount)]
             # fitnesses = [0 for i in range(6)]
             fitnesses = self.fitness(curentLocs, fitnesses)
             
@@ -324,10 +363,10 @@ class TSP():
             selectedPopulation = self.selection(fitnesses, selectionPercent)
 
             ## perform crossover
-            locs = self.crossover(curentLocs, selectedPopulation, fitnesses, crossOverChance,  self.crossoverpercent)
+            locs = self.crossover(curentLocs, selectedPopulation, fitnesses, crossOverChance,  inputCrossOverPercent)
 
             ## mutate
-            locs = self.mutation(locs, self.mutationchance, mutationPercent)
+            locs = self.mutation(locs, inputMutationchance, mutationPercent)
 
             ## evaluation if worse revert to old state?
 
@@ -359,7 +398,7 @@ class TSP():
 
         locs = self.locs.copy()
         random.seed(42)
-        indicies = random.sample(range(100), 100)
+        indicies = random.sample(range(self.cityCount), self.cityCount)
         # indicies = random.sample(range(6), 6)
         self.locs = [locs[i] for i in indicies]
 
@@ -479,9 +518,9 @@ class TSP():
             self.plot, = self.ax.plot(range(self.dataCount),np.zeros(self.dataCount)*np.NaN, 'mediumspringgreen')
             anim = FuncAnimation(self.fig, self.plotter, frames=len(self.perms), repeat=False, interval=100)#, blit=True)
             plt.show()
-        
+        else:
+            plt.close()
 
-        # plt.show()    ## for debugging
 
         ## plots the iterations of search
         plt.plot(np.array([i for i in range(len(bestFitnesses))]), np.array(bestFitnesses))
@@ -504,21 +543,19 @@ def inputParser():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument("iterations", type=str)
-    parser.add_argument("crossoverPercent", type=str)
-    parser.add_argument("mutationChance", type=str)
+    parser.add_argument("fileNameCount", type=str)
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
 
 ###############
 if __name__ == "__main__":
-    # parser = inputParser()
-    # tsp = TSP(int(parser.iterations), int(parser.crossoverPercent), float(parser.mutationChance), parser.verbose)
+    parser = inputParser()
+    tsp = TSP(int(parser.iterations), int(parser.fileNameCount), parser.verbose)
 
 
     # t0 = time.time()
-    # tsp = TSP(50000, True)# parser.verbose)
-    tsp = TSP(500, crossoverPercent=16, mutationChance=0.14, verbose=True)
+    # tsp = TSP(10000, cityCount=97, verbose=False)
     tsp.travelPerson()
     # t1 = time.time()
     # print(t1-t0)

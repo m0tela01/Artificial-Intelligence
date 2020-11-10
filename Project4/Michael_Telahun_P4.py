@@ -24,10 +24,14 @@ class TSP():
         self.DATAIndex = 7
         self.dataCount = 0
         self.locs = []
+        
         self.dists = []
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.files = [f for f in os.listdir(self.cwd) if f.endswith('.tsp')]
-        self.locationsFile = 'Random100.tsp'#"Random100.tsp"
+        self.locationsFile = 'Random222.tsp'#"Random100.tsp"
+
+        self.cityCount = int(self.locationsFile.split('Random')[1].split('.')[0])
+        
 
         ## plotting
         self.fig, self.ax = plt.subplots(figsize=(12,8))
@@ -47,7 +51,7 @@ class TSP():
         self.bestPermutation = []
         self.currentGlobalFitness = float("inf")
         self.previousGlobalFitness = float("inf")
-        self.fitnesses = [0 for i in range(100)]
+        self.fitnesses = [0 for i in range(self.cityCount)]
         self.globalFitnesses = []
         self.first, self.last = [], []
         self.selectedPopulation = []
@@ -128,7 +132,7 @@ class TSP():
         ## do some operation
 
         # for i in range(5):
-        for i in range(99):
+        for i in range(self.cityCount-1):
             fitnesses[i] = self.elucidianDistance(locs[i], locs[i+1])
         
         fitnesses[len(fitnesses)-1] = self.elucidianDistance(locs[len(locs)-1], locs[0])
@@ -208,8 +212,8 @@ class TSP():
         locs.insert(0,self.first.copy())
         locs.append(self.last.copy())
 
-        # self.fitnesses = [0 for i in range(100)]
-        self.fitnesses = [0 for i in range(6)]
+        self.fitnesses = [0 for i in range(self.cityCount)]
+        # self.fitnesses = [0 for i in range(6)]
         return locs
 
 
@@ -252,7 +256,7 @@ class TSP():
         inputCrossOverPercent, inputMutationchance = self.crossoverpercent, self.mutationchance
 
         ## find the fitnesses per location
-        fitnesses = [0 for i in range(100)]
+        fitnesses = [0 for i in range(self.cityCount)]
         # fitnesses = [0 for i in range(6)]
         fitnesses = self.fitness(locs, fitnesses)
         
@@ -286,7 +290,7 @@ class TSP():
 
         locs = self.locs.copy()
         random.seed(42)
-        indicies = random.sample(range(100), 100)
+        indicies = random.sample(range(self.cityCount), self.cityCount)
         # indicies = random.sample(range(6), 6)
         self.locs = [locs[i] for i in indicies]
 
@@ -436,7 +440,7 @@ if __name__ == "__main__":
 
     # t0 = time.time()
     # iterations, crossoverPercent, mutationChance, verbose=False
-    tsp = TSP(10000, crossoverPercent=16, mutationChance=0.14, verbose=True)# parser.verbose)
+    tsp = TSP(10000, crossoverPercent=20, mutationChance=0.14, verbose=True)# parser.verbose)
     tsp.travelPerson()
     # t1 = time.time()
     # print(t1-t0)
